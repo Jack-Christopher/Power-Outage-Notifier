@@ -1,7 +1,21 @@
 import re
 import seeker
 
-district = input("District: ")
+# read distritos.txt
+with open("distritos.txt", "r", encoding="utf-8") as f:
+    distritos = f.read().splitlines()
+    i = 1
+    # sort by length
+    # distritos.sort(key=len)
+    distritos.sort()
+    for dist in distritos:
+        print(str(i) + ": " + dist)
+        i += 1
+
+district = int(input("\nDistrict: "))
+district = distritos[district-1]
+print("\nDistrict: " + district)
+
 
 soup, driver = seeker.access("http://www.seal.com.pe/clientes/SitePages/Cortes.aspx")
 
@@ -34,18 +48,22 @@ for id_ in id_list:
         title = item.find('span').text + ": "
         content = item.find('td', class_='ms-formbody').text.strip()
         if title == 'Descripción: ':
-            reason = re.search(r'Motivo	: (.+)(.+\n)*', content).group(1)
-            affected = re.search(r'Zonas afectadas: (.+)(.+\n)*', content).group(1)
-            content = "Motivo: " + reason + '\nZonas afectadas: ' + affected 
-            title = ""
-            if district.lower() in affected.lower():
+            # content_ = content.lower()
+            # print(content_)
+            # reason = re.search(r'motivo(.+)(.+\n)*', content_).group(1)
+            # affected = re.search(r'zonas afectadas(.*): (.+)(.+\n)*', content_).group(1)
+            # content = "Motivo: " + reason + '\nZonas afectadas: ' + affected 
+            # title = ""
+            # if district.lower() in affected.lower():
+                # must_show = True
+            if district.lower() in content.lower():
                 must_show = True
         block = title + content + '\n'
         if content != '':
             report += block
 
     report += '\n'
-    data_file.write(report)
+    # data_file.write(report)
 
     if must_show:
         print(report)
