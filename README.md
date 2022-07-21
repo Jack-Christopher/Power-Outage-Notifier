@@ -16,9 +16,9 @@ Other things to include:
   - **Coverage**: It's a program that works just for Power Outages in Arequipa, Peru.
 
 ## Installation
-Before you can use this tool, you need to install the following libraries:
+Before you can use this tool, you need to install the following libraries: 
 ```
-pip freeze > requirements.txt
+pip install -r requirements.txt
 ```
 
 You can run it by double clicking the file, but thus it will just work once. In order to run it every time you start your computer, you should do the following:
