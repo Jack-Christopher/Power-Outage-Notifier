@@ -3,8 +3,8 @@ import os
 import json
 import seeker
 import winsound
-from datetime import date
-
+from datetime import date, timedelta
+from colorama import init, Fore, Back, Style
 
 # check if settings.json exists, then create it
 if not os.path.isfile('settings.json'):
@@ -21,10 +21,25 @@ if not os.path.isfile('settings.json'):
     district = distritos[district-1]
     print("\nDistrict: " + district)
 
-    # add district to settings
+    # add district and yesterday date to settings
     with open("settings.json", "w+") as settings:
-        temp_data = {"name": os.getlogin( ), "district": district}
+        temp_data = {"name": os.getlogin( ), "district": district, "last_check": str(date.today() - timedelta(days=1))}
         json.dump(temp_data, settings, indent=4)
+        print("\nSettings file created!")
+
+
+# if the power outage have not been checked today, check it
+with open('settings.json') as reader:
+    settings = json.load(reader)
+    today = str(date.today())
+    if settings['last_check'] == today:
+        print("Today is already checked, closing...")
+        exit()
+    else:
+        settings['last_check'] = today
+        with open('settings.json', 'w') as writer:
+            json.dump(settings, writer, indent=4)
+
 
 # get district from settings
 with open("settings.json", "r") as settings:
@@ -88,9 +103,16 @@ driver.close()
 # with open("reports.json", "w+") as reports_file:
     # json.dump(reports, reports_file, indent=4)
 
+# color all the appearances of target in the text
+def color(text, target):
+    return text.replace(target, Fore.CYAN + Back.BLUE + target + Style.RESET_ALL)
+
+
+
+
 if len(reports) > 0:
     for i in range(3):
-            winsound.Beep(1000, 250)
+        winsound.Beep(1000, 250)
     print("\nCorte de luz programado para el distrito de " + district + ":")
     for report in reports:
-        print(report, "\n")
+        print(color(report, district))
