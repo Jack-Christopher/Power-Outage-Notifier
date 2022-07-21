@@ -16,7 +16,7 @@ Other things to include:
   - **Coverage**: It's a program that works just for Power Outages in Arequipa, Peru.
 
 ## Installation
-Before you can use this tool, you need to install the following libraries: 
+Before you can use this tool, you need to install the necesary libraries using the following command:
 ```
 pip install -r requirements.txt
 ```
