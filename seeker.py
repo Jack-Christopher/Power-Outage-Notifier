@@ -1,11 +1,30 @@
 import os
 import json
+from sys import platform
 from bs4 import BeautifulSoup
 
 from selenium import webdriver
-from selenium.webdriver.edge.options import Options
-from selenium.webdriver.edge.service import Service as EdgeService
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
+
+
+# using microsoft edge
+if platform == "win32":
+    from selenium.webdriver.edge.options import Options
+    from selenium.webdriver.edge.service import Service as EdgeService
+    from webdriver_manager.microsoft import EdgeChromiumDriverManager
+    DriverCreator = webdriver.Edge
+    ServiceProvider = EdgeService
+    DriverManager = EdgeChromiumDriverManager
+# using firefox
+elif platform == "linux" or platform == "linux2":
+    from selenium.webdriver.firefox.options import Options
+    from selenium.webdriver.firefox.service import Service as FirefoxService
+    from webdriver_manager.firefox import GeckoDriverManager
+    DriverCreator = webdriver.Firefox
+    ServiceProvider = FirefoxService
+    DriverManager = GeckoDriverManager
+elif platform == "darwin":
+    exit( "MacOS is not supported yet" )
+
 
 
 def setExecPath(path):
@@ -30,12 +49,12 @@ options.add_argument("--log-level=3")
 def access(url, driver=None):
     if driver is None:
         try :
-            driver = webdriver.Edge(options=options, service=EdgeService(executable_path=getExecPath()))
+            driver = DriverCreator(options=options, service=ServiceProvider(executable_path=getExecPath()))
         except:
             print("Driver not found. Installing...")
-            service = EdgeService(EdgeChromiumDriverManager( path=r"").install())
+            service = ServiceProvider(DriverManager( path=r"").install())
             setExecPath(service.path)
-            driver = webdriver.Edge(service=service, options=options)
+            driver = DriverCreator(service=service, options=options)
             os.system("cls")
     print("Accesing site: '" + url + "'")
     driver.get(url)    
