@@ -6,47 +6,86 @@ import winsound
 from datetime import date, timedelta
 from colorama import init, Fore, Back, Style
 
-# check if settings.json exists, then create it
-if not os.path.isfile('settings.json'):
-    # read districts from districts.txt
-    with open("distritos.txt", "r", encoding="utf-8") as f:
-        distritos = f.read().splitlines()
-        i = 1
-        distritos.sort()
-        for dist in distritos:
-            print(str(i) + ": " + dist)
-            i += 1
+# check if settings.json exists, if not, create it
+def checkSettingsFile():
+    if not os.path.isfile('settings.json'):
+        # read districts from districts.txt
+        with open("distritos.txt", "r", encoding="utf-8") as f:
+            distritos = f.read().splitlines()
+            i = 1
+            distritos.sort()
+            for dist in distritos:
+                print(str(i) + ": " + dist)
+                i += 1
 
-    district = int(input("\nDistrict: "))
-    district = distritos[district-1]
-    print("\nDistrict: " + district)
+        district_number = int(input("\nEnter District Number: "))
+        district = distritos[district_number-1]
+        print("\nSelected District: " + district)
 
-    # add district and yesterday date to settings
-    with open("settings.json", "w+") as settings:
-        temp_data = {"name": os.getlogin( ), "district": district, "last_check": str(date.today() - timedelta(days=1))}
-        json.dump(temp_data, settings, indent=4)
-        print("\nSettings file created!")
+        # add initial data to settings file
+        with open("settings.json", "w+") as settings:
+            temp_data = {
+                "name": os.getlogin( ), 
+                "district": district, 
+                "last_check": str(date.today() - timedelta(days=1)),
+                "driver_path": ""
+            }
+            json.dump(temp_data, settings, indent=4)
+            print("\nSettings file created!")
 
 
 # if the power outage have not been checked today, check it
-with open('settings.json') as reader:
-    settings = json.load(reader)
-    today = str(date.today())
-    if settings['last_check'] == today:
-        print("Today is already checked, closing...")
-        exit()
-    else:
-        settings['last_check'] = today
-        with open('settings.json', 'w') as writer:
-            json.dump(settings, writer, indent=4)
+def hasCheckedToday():
+    with open('settings.json') as reader:
+        settings = json.load(reader)
+        today = str(date.today())
+        if settings['last_check'] == today:
+            print("Today is already checked, closing...")
+            exit()
 
 
 # get district from settings
-with open("settings.json", "r") as settings:
-    data = json.load(settings)
-    district = data["district"]
+def getDistrict():
+    with open("settings.json", "r") as settings:
+        data = json.load(settings)
+        district = data["district"]
+    return district
 
 
+# mark today as checked
+def checkToday():
+    today = str(date.today())
+    data = ""
+    with open('settings.json', 'r') as settings:
+        data = json.load(settings)
+    with open('settings.json', 'w') as settings:
+        data['last_check'] = today
+        json.dump(data, settings, indent=4) 
+
+
+# color all the appearances of target in the text
+def color(text, target):
+    return text.replace(target, Fore.CYAN + Back.BLUE + target + Style.RESET_ALL)
+
+
+def printReports(reports):
+    if len(reports) > 0:
+        for i in range(3):
+            winsound.Beep(1000, 250)
+        print("\nCorte de luz programado para el distrito de " + district + ":")
+        for report in reports:
+            print(color(report, district))
+    else:
+        print("No hay cortes de luz programados para el distrito de " + district + ".")
+
+
+
+checkSettingsFile()
+hasCheckedToday()
+district = getDistrict()
+
+# init source of data
+print("Initializing...")
 soup, driver = seeker.access("http://www.seal.com.pe/clientes/SitePages/Cortes.aspx")
 os.system("cls")
 
@@ -62,14 +101,12 @@ data = re.findall(r'"\d{4}"', data)
 for item in data:
     id_list.append(item.replace('"', ''))
 
-reports = []
-
 # iterate over each power outage report
+reports = []
 for id_ in id_list:
     url = "http://www.seal.com.pe/clientes/Lists/Calendario/DispForm.aspx?ID=" + id_
     
     soup, driver = seeker.access(url, driver)
-    os.system("cls")
     table = soup.find('table', class_='ms-formtable')
     data = table.find_all('tr')
 
@@ -97,22 +134,9 @@ for id_ in id_list:
     if found_data:
         reports.append(report)
 
+    os.system("cls")
+
+
 driver.close()
-
-# store reports in a file json
-# with open("reports.json", "w+") as reports_file:
-    # json.dump(reports, reports_file, indent=4)
-
-# color all the appearances of target in the text
-def color(text, target):
-    return text.replace(target, Fore.CYAN + Back.BLUE + target + Style.RESET_ALL)
-
-
-
-
-if len(reports) > 0:
-    for i in range(3):
-        winsound.Beep(1000, 250)
-    print("\nCorte de luz programado para el distrito de " + district + ":")
-    for report in reports:
-        print(color(report, district))
+checkToday()
+printReports(reports)
