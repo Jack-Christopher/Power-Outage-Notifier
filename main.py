@@ -2,10 +2,17 @@ import re
 import os
 import json
 import seeker
-import winsound
+#import winsound
+from sys import platform
+from playsound import playsound
 from datetime import date, timedelta
 from colorama import init, Fore, Back, Style
 
+if platform == "win32":
+    clearScreenCommand = "cls"
+elif platform == "linux" or platform == "linux2":
+    clearScreenCommand = "clear"
+    
 # check if settings.json exists, if not, create it
 def checkSettingsFile():
     if not os.path.isfile('settings.json'):
@@ -70,13 +77,15 @@ def color(text, target):
 
 def printReports(reports):
     if len(reports) > 0:
-        for i in range(3):
-            winsound.Beep(1000, 250)
+        #for i in range(3):
+            #winsound.Beep(1000, 250)
+        playsound('Something wrong.wav')
         print("\nCorte de luz programado para el distrito de " + district + ":")
         for report in reports:
             print(color(report, district))
     else:
         print("No hay cortes de luz programados para el distrito de " + district + ".")
+        playsound('All right.wav')
 
 
 
@@ -87,7 +96,7 @@ district = getDistrict()
 # init source of data
 print("Initializing...")
 soup, driver = seeker.access("http://www.seal.com.pe/clientes/SitePages/Cortes.aspx")
-os.system("cls")
+os.system(clearScreenCommand)
 
 # remove code blocks
 soup.find('head').decompose()
@@ -134,7 +143,7 @@ for id_ in id_list:
     if found_data:
         reports.append(report)
 
-    os.system("cls")
+    os.system(clearScreenCommand)
 
 
 driver.close()
